@@ -94,7 +94,6 @@ deploy_staging:
   image: kroniak/ssh-client
   script:
     - cp -r /tmp/ssh/ ~/.ssh
-    - scp -r govhub-app.tgz $DEPLOY_STAGING_SSH_HOST:/tmp/
     - scp -r target/govhub-reverse-proxy.war $DEPLOY_STAGING_SSH_HOST:/tmp/
     - ssh $DEPLOY_STAGING_SSH_HOST 'sudo systemctl stop tomcat'
     - ssh $DEPLOY_STAGING_SSH_HOST 'sudo cp -r /tmp/govhub-reverse-proxy.war /opt/apache-tomcat-9.0.70/webapps/'  
