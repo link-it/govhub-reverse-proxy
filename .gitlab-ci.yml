@@ -12,7 +12,7 @@ variables:
     SONAR_USER: "gitlab-runner"
     SONAR_PASSWORD: "Password@123"
     DEPLOY_STAGING_SSH_HOST: "ec2-user@172.16.1.121"
-    PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/govhub/${CI_COMMIT_TAG}"
+    PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/govhub-reverse-proxy/${CI_COMMIT_TAG}"
 default:
     cache:
         paths:
