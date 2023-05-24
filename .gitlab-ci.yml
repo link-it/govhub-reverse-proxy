@@ -23,7 +23,7 @@ default:
 test:
     stage: test
     script:
-      - mvn verify sonar:sonar -U
+      - mvn clean verify sonar:sonar -U
     rules:
       - if: $CI_COMMIT_BRANCH == "staging"
         allow_failure: true
