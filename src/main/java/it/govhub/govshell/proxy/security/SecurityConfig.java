@@ -170,7 +170,7 @@ public class SecurityConfig {
 	private HttpSecurity applyAuthRules(HttpSecurity http) throws Exception {
 		http
 		.authorizeRequests()
-		.antMatchers("/", "/error").permitAll()
+		.antMatchers("/", "/error",  "/oauth2/authorization/**").permitAll()
 		.anyRequest().authenticated();
 		return http;
 	}
