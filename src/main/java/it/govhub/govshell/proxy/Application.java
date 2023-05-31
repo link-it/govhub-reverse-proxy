@@ -53,7 +53,7 @@ import it.govhub.security.config.SecurityExportedBeans;
 @SpringBootApplication
 @EnableAutoConfiguration(exclude = {ErrorMvcAutoConfiguration.class})
 @Import({CommonsExportedBeans.class, TimeZoneConfigurer.class, SecurityExportedBeans.class} )
-@EnableJpaRepositories("it.govhub.govshell.proxy.repository")
+@EnableJpaRepositories({"it.govhub.govshell.proxy.repository"})
 @EntityScan("it.govhub.govshell.proxy.entities")
 @ComponentScan( {"it.govhub.govregistry.readops.api.assemblers", "it.govhub.govshell.proxy"})
 public class Application extends SpringBootServletInitializer {
