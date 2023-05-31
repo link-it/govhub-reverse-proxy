@@ -106,7 +106,7 @@ public class SecurityConfig {
 		
 		if (authType.equals("oauth") ) {
 			http.oauth2Login()
-				.defaultSuccessUrl(defaultSuccessUrl)
+				.defaultSuccessUrl(defaultSuccessUrl, true)
 				.userInfoEndpoint()
 				.userService(oauth2UserService());
 		}
