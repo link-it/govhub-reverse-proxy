@@ -46,13 +46,15 @@ import it.govhub.govregistry.commons.security.UnauthorizedAuthenticationEntryPoi
 
 
 /**
- * Configurazione della sicurezza
+ * Configurazione della sicurezza, per lo UserDetailService con govhub vedi:
+ * 
+ * https://stackoverflow.com/questions/36730903/add-custom-userdetailsservice-to-spring-security-oauth2-app
  * 
  */
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig{
+public class SecurityConfig {
 	
 	@Value("${server.servlet.session.cookie.name:GOVHUB-JSESSIONID}")
 	private String sessionCookieName;
@@ -66,11 +68,11 @@ public class SecurityConfig{
     @Value("${govshell.auth.type:form}")
     String authType;
     
+    @Value("${govshell.auth.oauth.default-succes-url:/}")
+    String defaultSuccessUrl;
+    
     @Autowired
     LdapConfiguration ldapConfiguration;
-	
-	@Autowired
-	private AccessDeniedHandlerImpl accessDeniedHandler;
 	
 	@Autowired
 	private LoginSuccessHandler loginSuccessHandler;
@@ -87,18 +89,39 @@ public class SecurityConfig{
 	Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 	
 	@Bean
+	public AccessDeniedHandlerImpl accessDeniedHandler() {
+		return new AccessDeniedHandlerImpl();
+	}
+	
+	@Bean
+	public OAuthGovhubUserService oauth2UserService() {
+		return new OAuthGovhubUserService();
+	}
+	
+	@Bean
 	public SecurityFilterChain securityFilterChainDev(HttpSecurity http, ObjectMapper jsonMapper) throws Exception {
+		
 		applyAuthRules(http)
-			.csrf().disable()																												// Disabilita csrf perchè il cookie di sessione viene rilasciato con SameSite: strict
-		.formLogin()
-			.loginProcessingUrl("/do-login")
-			.successHandler(this.loginSuccessHandler)
-			.failureHandler(this.loginFailureHandler)
-			.permitAll()
-		.and()
+		.csrf().disable();																												// Disabilita csrf perchè il cookie di sessione viene rilasciato con SameSite: strict
+		
+		if (authType.equals("oauth") ) {
+			http.oauth2Login()
+				.defaultSuccessUrl(defaultSuccessUrl)
+				.userInfoEndpoint()
+				.userService(oauth2UserService());
+		}
+		else {
+			http.formLogin()
+				.loginProcessingUrl("/do-login")
+				.successHandler(this.loginSuccessHandler)
+				.failureHandler(this.loginFailureHandler)
+				.permitAll();
+		}
+		
+		http
 		.exceptionHandling()
 		// Gestisci accessDenied in modo da restituire un problem ben formato TODO: Vedi se a govshell serve davero
-		.accessDeniedHandler(this.accessDeniedHandler)																
+		.accessDeniedHandler(this.accessDeniedHandler())																
 		// Gestisci la mancata autenticazione con un problem ben formato
 		.authenticationEntryPoint(new UnauthorizedAuthenticationEntryPoint(jsonMapper))	
 		.and()
@@ -141,13 +164,13 @@ public class SecurityConfig{
 		          .port(this.ldapConfiguration.getServerPort())
 		          .managerDn(this.ldapConfiguration.getManagerDn())
 		    	  .managerPassword(this.ldapConfiguration.getManagerPassword());
-		  }
-		  
+		  } 
 	  }
 		  
 	private HttpSecurity applyAuthRules(HttpSecurity http) throws Exception {
 		http
 		.authorizeRequests()
+		.antMatchers("/", "/error").permitAll()
 		.anyRequest().authenticated();
 		return http;
 	}
