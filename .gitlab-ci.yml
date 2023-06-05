@@ -43,7 +43,6 @@ build_war:
       - chmod 700 ~/.ssh 
       - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
       - mvn -s /tmp/maven_settings/settings-repo_linkit.xml -U deploy -Pwar -DskipTests=true 
-      - cd src/main/resources/
     artifacts:
         paths:
           - target/govhub-reverse-proxy.war
