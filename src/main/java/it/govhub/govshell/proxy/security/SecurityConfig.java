@@ -110,15 +110,12 @@ public class SecurityConfig {
 				.userInfoEndpoint()
 				.userService(oauth2UserService());
 		}
-		else {
-			http.formLogin()
+
+		http.formLogin()
 				.loginProcessingUrl("/do-login")
 				.successHandler(this.loginSuccessHandler)
 				.failureHandler(this.loginFailureHandler)
-				.permitAll();
-		}
-		
-		http
+				.and()
 		.exceptionHandling()
 		// Gestisci accessDenied in modo da restituire un problem ben formato TODO: Vedi se a govshell serve davero
 		.accessDeniedHandler(this.accessDeniedHandler())																
