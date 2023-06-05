@@ -11,13 +11,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import it.govhub.govregistry.commons.config.V1RestController;
 import it.govhub.govregistry.commons.entity.ApplicationEntity;
 import it.govhub.govregistry.commons.exception.InternalConfigurationException;
 import it.govhub.govshell.proxy.beans.Application;
 import it.govhub.govshell.proxy.beans.ApplicationList;
 import it.govhub.govshell.proxy.repository.ApplicationRepository;
 
-@RestController
+@V1RestController
 public class ApplicationController implements ApplicationApi {
 	
 	@Autowired
