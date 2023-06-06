@@ -12,7 +12,7 @@ variables:
     SONAR_USER: "gitlab-runner"
     SONAR_PASSWORD: "Password@123"
     DEPLOY_STAGING_SSH_HOST: "ec2-user@172.16.1.121"
-    PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/govhub/${CI_COMMIT_TAG}"
+    PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/govhub-reverse-proxy/${CI_COMMIT_TAG}"
 default:
     cache:
         paths:
@@ -23,7 +23,7 @@ default:
 test:
     stage: test
     script:
-      - mvn verify sonar:sonar -U
+      - mvn clean verify sonar:sonar -U
     rules:
       - if: $CI_COMMIT_BRANCH == "staging"
         allow_failure: true
@@ -43,7 +43,6 @@ build_war:
       - chmod 700 ~/.ssh 
       - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
       - mvn -s /tmp/maven_settings/settings-repo_linkit.xml -U deploy -Pwar -DskipTests=true 
-      - cd src/main/resources/
     artifacts:
         paths:
           - target/govhub-reverse-proxy.war
