@@ -150,7 +150,7 @@ public class SecurityConfig{
 	private HttpSecurity applyAuthRules(HttpSecurity http) throws Exception {
 		http
 		.authorizeRequests()
-			.antMatchers("/actuator/health/liveness").permitAll()
+			.antMatchers("/actuator/**").permitAll()
 			.anyRequest().authenticated();
 		return http;
 	}
