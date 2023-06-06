@@ -167,8 +167,9 @@ public class SecurityConfig {
 	private HttpSecurity applyAuthRules(HttpSecurity http) throws Exception {
 		http
 		.authorizeRequests()
-		.antMatchers("/", "/error").permitAll()
-		.anyRequest().authenticated();
+			.antMatchers("/", "/error").permitAll()
+			.antMatchers("/actuator/health/liveness").permitAll()
+			.anyRequest().authenticated();
 		return http;
 	}
 	
