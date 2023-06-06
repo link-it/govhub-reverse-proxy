@@ -6,19 +6,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
 import it.govhub.govregistry.commons.entity.UserEntity;
 import it.govhub.govregistry.commons.messages.UserMessages;
 import it.govhub.security.repository.SecurityUserRepository;
 
-public class OAuthGovhubUserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
-	
-	DefaultOAuth2UserService authUserService = new DefaultOAuth2UserService();
+public class OidcGovhubUserService implements OAuth2UserService<OidcUserRequest, OidcUser>{
 	
 	@Autowired
 	SecurityUserRepository userRepo;
@@ -29,19 +27,22 @@ public class OAuthGovhubUserService implements OAuth2UserService<OAuth2UserReque
 	@Value("${govshell.auth.oauth.principal-claim:}")
 	String principalClaim;
 	
-	Logger log = LoggerFactory.getLogger(OAuthGovhubUserService.class);
+	Logger log = LoggerFactory.getLogger(OidcGovhubUserService.class);
+	
+	OidcUserService oidcUserService = new OidcUserService();
 
 	@Override
-	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-		log.debug("Loading OAuth2 user data...");
+	public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
 		
-		OAuth2User oauthUser = authUserService.loadUser(userRequest);
+		log.debug("Loading Oidc user data...");
+		
+		OidcUser oidcUser = this.oidcUserService.loadUser(userRequest);
 		
 		String username;
 		if (StringUtils.isEmpty(principalClaim)) {
-			username = oauthUser.getName();
+			username = oidcUser.getName();
 		} else {
-			String claim = oauthUser.getAttribute(principalClaim);
+			String claim = oidcUser.getAttribute(principalClaim);
 			username = claim.strip();
 		}
 		
@@ -53,7 +54,7 @@ public class OAuthGovhubUserService implements OAuth2UserService<OAuth2UserReque
 					return new UsernameNotFoundException(this.userMessages.principalNotFound(username)); 
 				});
 		
-		return new OAuthGovhubPrincipal(user, oauthUser);
+		return new OidcGovhubPrincipal(user, oidcUser);
 	}
 
 }
