@@ -70,9 +70,6 @@ public class SecurityConfig{
     LdapConfiguration ldapConfiguration;
 	
 	@Autowired
-	private AccessDeniedHandlerImpl accessDeniedHandler;
-	
-	@Autowired
 	private LoginSuccessHandler loginSuccessHandler;
 	
 	@Autowired
@@ -87,6 +84,11 @@ public class SecurityConfig{
 	Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 	
 	@Bean
+	public AccessDeniedHandlerImpl accessDeniedHandler() {
+		return new AccessDeniedHandlerImpl();
+	}
+	
+	@Bean
 	public SecurityFilterChain securityFilterChainDev(HttpSecurity http, ObjectMapper jsonMapper) throws Exception {
 		applyAuthRules(http)
 			.csrf().disable()																												// Disabilita csrf perchè il cookie di sessione viene rilasciato con SameSite: strict
@@ -98,7 +100,7 @@ public class SecurityConfig{
 		.and()
 		.exceptionHandling()
 		// Gestisci accessDenied in modo da restituire un problem ben formato TODO: Vedi se a govshell serve davero
-		.accessDeniedHandler(this.accessDeniedHandler)																
+		.accessDeniedHandler(this.accessDeniedHandler())																
 		// Gestisci la mancata autenticazione con un problem ben formato
 		.authenticationEntryPoint(new UnauthorizedAuthenticationEntryPoint(jsonMapper))	
 		.and()
@@ -148,7 +150,8 @@ public class SecurityConfig{
 	private HttpSecurity applyAuthRules(HttpSecurity http) throws Exception {
 		http
 		.authorizeRequests()
-		.anyRequest().authenticated();
+			.antMatchers("/actuator/health/liveness").permitAll()
+			.anyRequest().authenticated();
 		return http;
 	}
 	
