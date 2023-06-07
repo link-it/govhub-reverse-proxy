@@ -38,6 +38,11 @@ public class OidcGovhubUserService implements OAuth2UserService<OidcUserRequest,
 		
 		OidcUser oidcUser = this.oidcUserService.loadUser(userRequest);
 		
+		log.debug("User claims:");
+		for(var claim : oidcUser.getClaims().entrySet()) {
+			log.debug("{}={}", claim.getKey(), claim.getValue());
+		}
+		
 		String username;
 		if (StringUtils.isEmpty(principalClaim)) {
 			username = oidcUser.getName();

@@ -19,6 +19,7 @@ public class OidcGovhubPrincipal extends GovhubPrincipal implements OidcUser {
 
 	public OidcGovhubPrincipal(UserEntity user, OidcUser oidcUser) {
 		super(user);
+		this.oidcUser = oidcUser;
 	}
 
 	@Override
