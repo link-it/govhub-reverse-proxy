@@ -99,6 +99,11 @@ public class SecurityConfig {
 	}
 	
 	@Bean
+	public OidcGovhubUserService oidcUserService() {
+		return new OidcGovhubUserService();
+	}
+	
+	@Bean
 	public SecurityFilterChain securityFilterChainDev(HttpSecurity http, ObjectMapper jsonMapper) throws Exception {
 		
 		applyAuthRules(http)
@@ -108,7 +113,8 @@ public class SecurityConfig {
 			http.oauth2Login()
 				.defaultSuccessUrl(defaultSuccessUrl, true)
 				.userInfoEndpoint()
-				.userService(oauth2UserService());
+				.userService(oauth2UserService())
+				.oidcUserService(oidcUserService());
 		}
 
 		http.formLogin()
