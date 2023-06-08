@@ -13,14 +13,14 @@
 
 	<groupId>it.govhub</groupId>
 	<artifactId>reverse-proxy</artifactId>
-	<version>1.1.0</version>
+	<version>1.1.1</version>
 	<packaging>${packaging.type}</packaging>
 	<name>GovShell Reverse Proxy</name>
 	<description>Reverse Proxy per la connessione alle applicazioni di GovShell</description>
 
 	<properties>
 		<glassfish.version>1.1.4</glassfish.version>
-		<govregistry.version>[1.2.2, 2.0.0)</govregistry.version>
+		<govregistry.version>[1.2.3, 2.0.0)</govregistry.version>
 		<jacoco.version>0.8.8</jacoco.version>
 		<jackson.databind.nullable.version>0.2.1</jackson.databind.nullable.version>
 		<java.version>11</java.version>
