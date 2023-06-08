@@ -174,7 +174,7 @@ public class SecurityConfig {
 		http
 		.authorizeRequests()
 			.antMatchers("/", "/error").permitAll()
-			.antMatchers("/actuator/health/liveness").permitAll()
+			.antMatchers("/actuator/**").permitAll()
 			.anyRequest().authenticated();
 		return http;
 	}
