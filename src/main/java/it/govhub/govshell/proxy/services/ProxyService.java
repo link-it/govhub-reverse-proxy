@@ -39,6 +39,7 @@ import java.util.UUID;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +62,7 @@ import it.govhub.govregistry.commons.entity.UserEntity;
 import it.govhub.govregistry.commons.exception.ResourceNotFoundException;
 import it.govhub.govregistry.commons.exception.handlers.RestResponseEntityExceptionHandler;
 import it.govhub.govregistry.commons.messages.SystemMessages;
+import it.govhub.govshell.proxy.beans.XForwardedHeaders;
 import it.govhub.govshell.proxy.repository.ApplicationRepository;
 import it.govhub.security.services.SecurityService;
 
@@ -70,7 +72,10 @@ public class ProxyService {
 	
 	final Logger logger = LoggerFactory.getLogger(ProxyService.class);
 	
+	// Alcuni header sono considerati "riservati" e non possono essere aggiunti  attraverso il Builder, li escludiamo a priori
+	// per non gestire eccezioni. Questi header vengono determinati dai client, e dai proxy.
 	final static TreeSet<String> reservedHeaders = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+	
 	static {
 		reservedHeaders.addAll(Set.of(HttpHeaders.HOST, HttpHeaders.CONNECTION));
 	}
@@ -84,6 +89,18 @@ public class ProxyService {
 	@Value("${govshell.proxy.forwarded-prefix:}")
 	String forwardedPrefix;
 	
+	@Value("${govshell.proxy.forwarded-for:}")
+	String forwardedFor;
+	
+	@Value("${govshell.proxy.forwarded-host:}")
+	String forwardedHost;
+	
+	@Value("${govshell.proxy.forwarded-proto:}")
+	String forwardedProto;
+	
+	@Value("${govshell.proxy.forwarded-port:}")
+	String forwardedPort;
+	
 	@Autowired
 	ApplicationRepository appRepo;
 	
@@ -92,14 +109,39 @@ public class ProxyService {
 	
 	TreeSet<String> responseBlackListHeaders;
 	
+	TreeSet<String> requestBlackListHeaders;
+	
 	HttpClient client;
 	
 	public ProxyService(
-			@Value("${govshell.proxy.headers.response.blacklist:}")	List<String> blackListHeaders,
+			@Value("${govshell.proxy.headers.response.blacklist:}")	List<String> responseBlackListHeaders,
+			@Value("${govshell.proxy.headers.request.blacklist:}")	List<String> requestBlacklistHeaders,
 			@Value("${govshell.proxy.connection-timeout:10}")	Integer connectionTimeout) {
 		
 		this.responseBlackListHeaders = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-		this.responseBlackListHeaders.addAll(blackListHeaders);
+		this.responseBlackListHeaders.addAll(responseBlackListHeaders);
+		
+		// Blacklist dello header di autenticazione
+		this.requestBlackListHeaders = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+		this.requestBlackListHeaders.addAll(requestBlacklistHeaders);
+		this.requestBlackListHeaders.add(this.headerAuthentication);
+		
+		// Aggiungiamo alla blacklist gli header che imposteremo manualmente, in modo da non creare duplicati.
+		if (! StringUtils.isEmpty(this.forwardedPrefix)) {
+			this.requestBlackListHeaders.add(XForwardedHeaders.Prefix);
+		}
+		if (! StringUtils.isEmpty(this.forwardedFor)) {
+			this.requestBlackListHeaders.add(XForwardedHeaders.For);
+		}
+		if (! StringUtils.isEmpty(this.forwardedHost)) {
+			this.requestBlackListHeaders.add(XForwardedHeaders.Host);
+		}
+		if (! StringUtils.isEmpty(this.forwardedPort)) {
+			this.requestBlackListHeaders.add(XForwardedHeaders.Port);
+		}
+		if (! StringUtils.isEmpty(this.forwardedProto)) {
+			this.requestBlackListHeaders.add(XForwardedHeaders.Proto);
+		}
 		
 		this.client = HttpClient.newBuilder()
 				.connectTimeout(Duration.ofSeconds(connectionTimeout))
@@ -138,34 +180,57 @@ public class ProxyService {
 
 		logger.debug("Request Headers: ");
 		
+		String actualForwardedPrefix = this.forwardedPrefix;
 		Enumeration<String> headerNames = request.getHeaderNames();
 		while (headerNames.hasMoreElements()) {
-			String headerName = headerNames.nextElement();
-			logger.debug("{}: {}", headerName, request.getHeader(headerName));
-			if (!reservedHeaders.contains(headerName)) {
+			String name = headerNames.nextElement();
+			String value = request.getHeader(name);
+			
+			logger.debug("{}: {}", name, value);
+
+			if (!reservedHeaders.contains(name) && !reservedHeaders.contains(name)) {
 				try {
-					builder.header(headerName, request.getHeader(headerName));
+					// Dopo dovrò impostare lo X-Forwarded-Prefix per riflettere il path dell'applicazione govhub chiamata. 
+					// Qui me lo salvo nel caso non l'abbia già impostato con le properties.
+					if (name.equalsIgnoreCase(XForwardedHeaders.Prefix)) {
+							actualForwardedPrefix = value;
+					}
+					
+					builder.header(name, value);
 				} catch (IllegalArgumentException e) {
-					logger.error("Header riservato {}", headerName);
+					logger.error("Header riservato {}", name);
 				}
 			}
 		}
 
 		builder.header(this.traceHeaderName, traceId);
-		builder.header("X-Forwarded-Prefix", this.forwardedPrefix + "/" + applicationId);
-
+		
 		// Aggiungo header di autenticazione
 		UserEntity principal = SecurityService.getPrincipal();
 		builder.header(this.headerAuthentication, principal.getPrincipal());
+		
+		// Aggiungiamo eventuali headers di forwarding. Il prefix lo mettiamo sempre, perchè deve riflettere l'applicationId. 
+		// Però se non lo stiamo sovrascrivendo, dobbiamo prendere il valore che già c'era, perciò "actualForwardedPrefix"
+		builder.header("X-Forwarded-Prefix", actualForwardedPrefix + "/" + applicationId);
+		
+		if (! StringUtils.isEmpty(this.forwardedFor)) {
+			builder.header(XForwardedHeaders.For, this.forwardedFor);
+		}
+		if (! StringUtils.isEmpty(this.forwardedHost)) {
+			builder.header(XForwardedHeaders.Host, this.forwardedHost);
+		}
+		if (! StringUtils.isEmpty(this.forwardedPort)) {
+			builder.header(XForwardedHeaders.Port, this.forwardedPort);
+		}
+		if (! StringUtils.isEmpty(this.forwardedProto)) {
+			builder.header(XForwardedHeaders.Proto, this.forwardedProto);
+		}
 
 		HttpRequest newRequest = builder.build();
-
 		HttpResponse<InputStream> response = null;
 		try {
-			
 			response = this.client.send(newRequest, BodyHandlers.ofInputStream());
 			logger.debug("Proxying request: {} - Got response from backend: {}", traceId, response.statusCode());
-			
 		} catch (ConnectException e) {
 			
 			logger.error("Connect Exception while contacting the backend: " + e.getLocalizedMessage());
