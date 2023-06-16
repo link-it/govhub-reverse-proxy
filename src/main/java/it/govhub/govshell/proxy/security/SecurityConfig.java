@@ -19,6 +19,8 @@
 package it.govhub.govshell.proxy.security;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -30,10 +32,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
+import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
@@ -42,6 +51,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import it.govhub.govregistry.commons.security.AccessDeniedHandlerImpl;
 import it.govhub.govregistry.commons.security.UnauthorizedAuthenticationEntryPoint;
+import it.govhub.security.services.GovhubUserDetailService;
 
 
 
@@ -75,13 +85,16 @@ public class SecurityConfig {
     LdapConfiguration ldapConfiguration;
 	
 	@Autowired
-	private LoginSuccessHandler loginSuccessHandler;
+	LoginSuccessHandler loginSuccessHandler;
 	
 	@Autowired
-	private  LoginFailureHandler loginFailureHandler;
+	LoginFailureHandler loginFailureHandler;
 	
 	@Autowired
-	private ExpiredSessionHandler expiredSessionHandler;
+	ExpiredSessionHandler expiredSessionHandler;
+	
+	@Autowired
+	GovhubUserDetailService userDetailsService;
 	
 	@Autowired
 	LdapGovhubPrincipalMapper contextMapper;
@@ -101,6 +114,35 @@ public class SecurityConfig {
 	@Bean
 	public OidcGovhubUserService oidcUserService() {
 		return new OidcGovhubUserService();
+	}
+	
+	  @Bean
+	  public AuthenticationProvider daoAuthenticationProvider() {
+	    var provider =  new DaoAuthenticationProvider();
+	    provider.setPasswordEncoder(passwordEncoder());
+	    provider.setUserDetailsService(this.userDetailsService);
+	    return provider;
+	  }
+	  
+	  
+	@Bean
+	@SuppressWarnings("deprecation")
+	public static PasswordEncoder passwordEncoder() {
+		String encodingId = "bcrypt";
+		Map<String, PasswordEncoder> encoders = new HashMap<>();
+		encoders.put(encodingId, new BCryptPasswordEncoder());
+		encoders.put("ldap", new org.springframework.security.crypto.password.LdapShaPasswordEncoder());
+		encoders.put("MD4", new org.springframework.security.crypto.password.Md4PasswordEncoder());
+		encoders.put("MD5", new org.springframework.security.crypto.password.MessageDigestPasswordEncoder("MD5"));
+		encoders.put("noop", org.springframework.security.crypto.password.NoOpPasswordEncoder.getInstance());
+		encoders.put("pbkdf2", new Pbkdf2PasswordEncoder());
+		encoders.put("scrypt", new SCryptPasswordEncoder());
+		encoders.put("SHA-1", new org.springframework.security.crypto.password.MessageDigestPasswordEncoder("SHA-1"));
+		encoders.put("SHA-256",
+				new org.springframework.security.crypto.password.MessageDigestPasswordEncoder("SHA-256"));
+		encoders.put("sha256", new org.springframework.security.crypto.password.StandardPasswordEncoder());
+		encoders.put("argon2", new Argon2PasswordEncoder());
+		return new CustomDelegatingPasswordEncoder(encodingId, encoders);
 	}
 	
 	@Bean
@@ -174,7 +216,7 @@ public class SecurityConfig {
 		http
 		.authorizeRequests()
 			.antMatchers("/", "/error").permitAll()
-			.antMatchers("/actuator/health/liveness").permitAll()
+			.antMatchers("/actuator/**").permitAll()
 			.anyRequest().authenticated();
 		return http;
 	}
