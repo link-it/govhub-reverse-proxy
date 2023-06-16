@@ -36,6 +36,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 
@@ -124,6 +125,14 @@ public class ProxyService {
 		// Blacklist dello header di autenticazione
 		this.requestBlackListHeaders = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 		this.requestBlackListHeaders.addAll(requestBlacklistHeaders);
+		
+		this.client = HttpClient.newBuilder()
+				.connectTimeout(Duration.ofSeconds(connectionTimeout))
+				.build();
+	}
+	
+	@PostConstruct
+	void initHeaders() {
 		this.requestBlackListHeaders.add(this.headerAuthentication);
 		
 		// Aggiungiamo alla blacklist gli header che imposteremo manualmente, in modo da non creare duplicati.
@@ -142,10 +151,6 @@ public class ProxyService {
 		if (! StringUtils.isEmpty(this.forwardedProto)) {
 			this.requestBlackListHeaders.add(XForwardedHeaders.Proto);
 		}
-		
-		this.client = HttpClient.newBuilder()
-				.connectTimeout(Duration.ofSeconds(connectionTimeout))
-				.build();
 	}
 	
 
