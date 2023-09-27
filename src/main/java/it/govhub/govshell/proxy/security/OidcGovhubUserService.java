@@ -48,6 +48,10 @@ public class OidcGovhubUserService implements OAuth2UserService<OidcUserRequest,
 			username = oidcUser.getName();
 		} else {
 			String claim = oidcUser.getAttribute(principalClaim);
+			if (claim == null) {
+				log.error("Missing claim: {}", principalClaim);
+				throw new UsernameNotFoundException(this.userMessages.principalNotFound(principalClaim)); 
+			}
 			username = claim.strip();
 		}
 		
