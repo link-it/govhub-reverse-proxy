@@ -23,6 +23,7 @@ import java.util.Collection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -32,6 +33,7 @@ import org.springframework.stereotype.Service;
 
 import it.govhub.govregistry.commons.entity.UserEntity;
 import it.govhub.govregistry.commons.messages.UserMessages;
+import it.govhub.security.cache.Caches;
 import it.govhub.security.repository.SecurityUserRepository;
 
 /**
@@ -57,6 +59,7 @@ public class LdapGovhubPrincipalMapper extends LdapUserDetailsMapper {
 	Logger logger = LoggerFactory.getLogger(LdapGovhubPrincipalMapper.class);
 
 	@Override
+	@Cacheable(cacheNames = Caches.PRINCIPALS, key = "#username")
 	public UserDetails mapUserFromContext(DirContextOperations ctx, String username, Collection<? extends GrantedAuthority> authorities) {
 		logger.debug("Mappo Utenza Ldap in un GovhubPrincipal.");
 		
