@@ -56,6 +56,7 @@ import it.govhub.security.config.SecurityExportedBeans;
 @EnableJpaRepositories({"it.govhub.govshell.proxy.repository"})
 @EntityScan("it.govhub.govshell.proxy.entities")
 @ComponentScan( {"it.govhub.govregistry.readops.api.assemblers", "it.govhub.govshell.proxy"})
+@EnableScheduling
 public class Application extends SpringBootServletInitializer {
 	
 	@Value("${govhub.time-zone:Europe/Rome}")
