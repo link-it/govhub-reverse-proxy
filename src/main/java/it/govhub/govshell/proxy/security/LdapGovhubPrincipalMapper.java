@@ -1,7 +1,7 @@
 /*
- * GovShell - Application dashboard for GovHub
+ * GovHub - Application suite for Public Administration
  *
- * Copyright (c) 2021-2023 Link.it srl (http://www.link.it).
+ * Copyright (c) 2023-2024 Link.it srl (https://www.link.it).
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3, as published by
@@ -36,17 +36,6 @@ import it.govhub.govregistry.commons.messages.UserMessages;
 import it.govhub.security.cache.Caches;
 import it.govhub.security.repository.SecurityUserRepository;
 
-/**
- * Mappa l'utente Ldap in un GovhubPrincipal, ignora gli attributi letti dallo
- * ldapUser. Se gli attributi non servono, allora implementare
- * UserDetailsContextMapper e restituire direttamente lo userDetails che ci
- * serve.
- * 
- * Se necessario restituire un LdapGovhubUser che ha anche il dn
- * 
- * String dn = ctx.getNameInNamespace();
- *
- */
 @Service
 public class LdapGovhubPrincipalMapper extends LdapUserDetailsMapper {
 
