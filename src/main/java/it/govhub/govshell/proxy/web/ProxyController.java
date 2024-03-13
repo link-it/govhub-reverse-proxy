@@ -1,7 +1,7 @@
 /*
- * GovShell - Application dashboard for GovHub
+ * GovHub - Application suite for Public Administration
  *
- * Copyright (c) 2021-2023 Link.it srl (http://www.link.it).
+ * Copyright (c) 2023-2024 Link.it srl (https://www.link.it).
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3, as published by
@@ -44,14 +44,3 @@ public class ProxyController {
     @Autowired
     ApplicationRepository appRepo;
     
-    @RequestMapping("/{application_id}/**")
-    public ResponseEntity<Resource> proxyMultipart(
-    				@Parameter(name = "application_id", required = true) @PathVariable("application_id") String applicationId, 
-    				HttpServletRequest request )
-            throws URISyntaxException, IOException, InterruptedException {
-    	
-    	return this.service.processProxyRequest(applicationId, request);
-    }
-    
-    
-}

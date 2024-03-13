@@ -1,7 +1,7 @@
 /*
- * GovShell - Application dashboard for GovHub
+ * GovHub - Application suite for Public Administration
  *
- * Copyright (c) 2021-2023 Link.it srl (http://www.link.it).
+ * Copyright (c) 2023-2024 Link.it srl (https://www.link.it).
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3, as published by
@@ -55,12 +55,6 @@ import it.govhub.security.services.GovhubUserDetailService;
 
 
 
-/**
- * Configurazione della sicurezza, per lo UserDetailService con govhub vedi:
- * 
- * https://stackoverflow.com/questions/36730903/add-custom-userdetailsservice-to-spring-security-oauth2-app
- * 
- */
 
 @Configuration
 @EnableWebSecurity
@@ -216,17 +210,6 @@ public class SecurityConfig {
 		http
 		.authorizeRequests()
 			.antMatchers("/", "/error").permitAll()
-			.antMatchers("/actuator/**").permitAll()
-			.anyRequest().authenticated();
-		return http;
-	}
-	
-
-	/**
-	 * Pubblica gli eventi di sessione sul WebApplicationContext radice.
-	 * Consente nel nostro caso di contare il numero di sessioni attive per utente e limitarlo di conseguenza.
-	 * 
-	 */
 	@Bean
 	public HttpSessionEventPublisher httpSessionEventPublisher() {
 	    return new HttpSessionEventPublisher();

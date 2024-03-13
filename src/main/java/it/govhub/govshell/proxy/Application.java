@@ -1,7 +1,7 @@
 /*
- * GovShell - Application dashboard for GovHub
+ * GovHub - Application suite for Public Administration
  *
- * Copyright (c) 2021-2023 Link.it srl (http://www.link.it).
+ * Copyright (c) 2023-2024 Link.it srl (https://www.link.it).
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3, as published by
@@ -41,14 +41,6 @@ import it.govhub.govregistry.commons.config.TimeZoneConfigurer;
 import it.govhub.govregistry.commons.exception.handlers.RequestRejectedExceptionHandler;
 import it.govhub.security.config.SecurityExportedBeans;
 
-/**
- * Applicazione Spring di GovShell.
- * 
- * Le entità e i repository devono essere scansionati a mano per via della Import,
- * dove vengono specificati a loro volta i packages dei repository e delle entità.
- *
- * Escludiamo anche ErrorMvcAutoConfiguration in modo da disabilitare la pagina /error	
- */
 
 @SpringBootApplication
 @EnableAutoConfiguration(exclude = {ErrorMvcAutoConfiguration.class})
@@ -66,20 +58,12 @@ public class Application extends SpringBootServletInitializer {
         SpringApplication.run(Application.class, args);
     }
     
-	/**
-	 * Questo Bean Restituisce un Problem quando spring-security rifiuta una
-	 * richiesta perchè ritenuta ad esempio non sicura.
-	 */
 	@Bean
 	public RequestRejectedHandler requestRejectedHandler() {
 	   return new RequestRejectedExceptionHandler();
 	}
 	
 
-	/**
-	 * Modifichiamo il jsonMapper impostando il timeZone
-	 *
-	 */
 	@Bean
 	public Jackson2ObjectMapperBuilderCustomizer jsonCustomizer() {
 		return builder ->  builder.
