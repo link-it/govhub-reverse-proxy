@@ -44,3 +44,14 @@ public class ProxyController {
     @Autowired
     ApplicationRepository appRepo;
     
+    @RequestMapping("/{application_id}/**")
+    public ResponseEntity<Resource> proxyMultipart(
+    				@Parameter(name = "application_id", required = true) @PathVariable("application_id") String applicationId, 
+    				HttpServletRequest request )
+            throws URISyntaxException, IOException, InterruptedException {
+    	
+    	return this.service.processProxyRequest(applicationId, request);
+    }
+    
+    
+}
