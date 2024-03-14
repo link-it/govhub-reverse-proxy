@@ -41,6 +41,14 @@ import it.govhub.govregistry.commons.config.TimeZoneConfigurer;
 import it.govhub.govregistry.commons.exception.handlers.RequestRejectedExceptionHandler;
 import it.govhub.security.config.SecurityExportedBeans;
 
+/**
+ * Applicazione Spring di GovShell.
+ * 
+ * Le entità e i repository devono essere scansionati a mano per via della Import,
+ * dove vengono specificati a loro volta i packages dei repository e delle entità.
+ *
+ * Escludiamo anche ErrorMvcAutoConfiguration in modo da disabilitare la pagina /error	
+ */
 
 @SpringBootApplication
 @EnableAutoConfiguration(exclude = {ErrorMvcAutoConfiguration.class})
@@ -48,7 +56,6 @@ import it.govhub.security.config.SecurityExportedBeans;
 @EnableJpaRepositories({"it.govhub.govshell.proxy.repository"})
 @EntityScan("it.govhub.govshell.proxy.entities")
 @ComponentScan( {"it.govhub.govregistry.readops.api.assemblers", "it.govhub.govshell.proxy"})
-@EnableScheduling
 public class Application extends SpringBootServletInitializer {
 	
 	@Value("${govhub.time-zone:Europe/Rome}")
@@ -58,12 +65,20 @@ public class Application extends SpringBootServletInitializer {
         SpringApplication.run(Application.class, args);
     }
     
+	/**
+	 * Questo Bean Restituisce un Problem quando spring-security rifiuta una
+	 * richiesta perchè ritenuta ad esempio non sicura.
+	 */
 	@Bean
 	public RequestRejectedHandler requestRejectedHandler() {
 	   return new RequestRejectedExceptionHandler();
 	}
 	
 
+	/**
+	 * Modifichiamo il jsonMapper impostando il timeZone
+	 *
+	 */
 	@Bean
 	public Jackson2ObjectMapperBuilderCustomizer jsonCustomizer() {
 		return builder ->  builder.

@@ -36,6 +36,17 @@ import it.govhub.govregistry.commons.messages.UserMessages;
 import it.govhub.security.cache.Caches;
 import it.govhub.security.repository.SecurityUserRepository;
 
+/**
+ * Mappa l'utente Ldap in un GovhubPrincipal, ignora gli attributi letti dallo
+ * ldapUser. Se gli attributi non servono, allora implementare
+ * UserDetailsContextMapper e restituire direttamente lo userDetails che ci
+ * serve.
+ * 
+ * Se necessario restituire un LdapGovhubUser che ha anche il dn
+ * 
+ * String dn = ctx.getNameInNamespace();
+ *
+ */
 @Service
 public class LdapGovhubPrincipalMapper extends LdapUserDetailsMapper {
 

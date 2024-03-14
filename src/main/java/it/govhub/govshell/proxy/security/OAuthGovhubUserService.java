@@ -55,20 +55,11 @@ public class OAuthGovhubUserService implements OAuth2UserService<OAuth2UserReque
 		
 		OAuth2User oauthUser = authUserService.loadUser(userRequest);
 		
-		log.debug("User attributes:");
-		for(var attribute : oauthUser.getAttributes().entrySet()) {
-			log.debug("{}={}", attribute.getKey(), attribute.getValue());
-		}
-
 		String username;
 		if (StringUtils.isEmpty(principalClaim)) {
 			username = oauthUser.getName();
 		} else {
 			String claim = oauthUser.getAttribute(principalClaim);
-			if (claim == null) {
-				log.error("Missing claim: {}", principalClaim);
-				throw new UsernameNotFoundException(this.userMessages.principalNotFound(principalClaim)); 
-			}
 			username = claim.strip();
 		}
 		
